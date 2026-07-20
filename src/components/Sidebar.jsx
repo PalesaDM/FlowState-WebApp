@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { to: "/locations", label: "Locations" },
   { to: "/routes", label: "Routes" },
   { to: "/calendar", label: "Calendar" },
+  { to: "/profile", label: "Profile" },
 ];
 
 export default function Sidebar() {
@@ -16,7 +17,13 @@ export default function Sidebar() {
 
       <nav className="sidebar-nav">
         {NAV_ITEMS.map((item) => (
-          <NavLink key={item.to} to={item.to} className="sidebar-link">
+          <NavLink
+           key={item.to} 
+           to={item.to} 
+           className={({ isActive }) =>
+            `sidebar-link${isActive ? " active" : ""}`
+          }
+          >
             {item.label}
           </NavLink>
         ))}

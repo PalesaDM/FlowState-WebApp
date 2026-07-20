@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Locations from "./pages/Locations";
 import RoutesPage from "./pages/Routes";
 import Calendar from "./pages/Calendar";
+import Profile from "./pages/Profile";
 
 import "./styles/global.css";
 
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/locations" element={<Locations />} />
           <Route path="/routes" element={<RoutesPage />} />
           <Route path="/calendar" element={<Calendar />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Routes>
     </BrowserRouter>

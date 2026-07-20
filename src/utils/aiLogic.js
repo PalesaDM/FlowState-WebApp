@@ -211,37 +211,114 @@ export function generateProductivityAdvice(events) {
   const backToBackEvents = detectBackToBackEvents(events);
   const workload = calculateDailyWorkload(events);
 
-  const advice = [workload.message];
+  const advice = [];
 
-  if (backToBackEvents.length > 0) {
-    const firstConflict = backToBackEvents[0];
+  if (todayEvents.length === 0) {
+    advice.push(
+      "Your calendar is open today. Choose one important task and give it a clear time slot."
+    );
 
     advice.push(
-      `${firstConflict.firstEvent} and ${firstConflict.secondEvent} are scheduled close together. Prepare what you need in advance and allow time to move between them.`
+      "Consider scheduling time for study, exercise, administration, or personal development."
+    );
+
+    return advice;
+  }
+
+  if (workload.level === "High") {
+    advice.push(
+      "You have a demanding day. Focus on your three most important commitments and avoid adding unnecessary tasks."
+    );
+  } else if (workload.level === "Moderate") {
+    advice.push(
+      "Your schedule is moderately busy. Prepare for your next commitment before starting less urgent work."
+    );
+  } else {
+    advice.push(
+      "Your schedule is manageable. Use your available time for one focused and meaningful task."
     );
   }
 
-  const usefulGap = gaps.find(
-    (gap) =>
-      gap.gapMinutes >= 45 &&
-      gap.gapMinutes <= 180
+  if (backToBackEvents.length > 0) {
+    const firstPair = backToBackEvents[0];
+
+    advice.push(
+      `${firstPair.firstEvent} and ${firstPair.secondEvent} are scheduled close together. Prepare everything you need beforehand and move promptly between them.`
+    );
+  }
+
+  const longGap = gaps.find(
+    (gap) => gap.gapMinutes >= 90 && gap.gapMinutes <= 240
   );
 
-  if (usefulGap) {
+  const mediumGap = gaps.find(
+    (gap) => gap.gapMinutes >= 45 && gap.gapMinutes < 90
+  );
+
+  if (longGap) {
+    const gapHours = Math.floor(longGap.gapMinutes / 60);
+    const remainingMinutes = longGap.gapMinutes % 60;
+
+    const durationText =
+      remainingMinutes === 0
+        ? `${gapHours} hour${gapHours === 1 ? "" : "s"}`
+        : `${gapHours} hour${gapHours === 1 ? "" : "s"} and ${remainingMinutes} minutes`;
+
     advice.push(
-      `You have a ${usefulGap.gapMinutes}-minute gap between ${usefulGap.afterEvent} and ${usefulGap.beforeEvent}. Consider using it for focused work, revision, rest, or a short personal task.`
+      `You have ${durationText} between ${longGap.afterEvent} and ${longGap.beforeEvent}. This is a good opportunity for focused study, project work, exercise, or an important errand.`
+    );
+  } else if (mediumGap) {
+    advice.push(
+      `You have a ${mediumGap.gapMinutes}-minute gap between ${mediumGap.afterEvent} and ${mediumGap.beforeEvent}. Use it for a short task, preparation, or a proper break.`
+    );
+  }
+
+  const morningEvents = todayEvents.filter(
+    (event) => Number(event.time?.split(":")[0]) < 12
+  );
+
+  const afternoonEvents = todayEvents.filter((event) => {
+    const hour = Number(event.time?.split(":")[0]);
+    return hour >= 12 && hour < 18;
+  });
+
+  const eveningEvents = todayEvents.filter(
+    (event) => Number(event.time?.split(":")[0]) >= 18
+  );
+
+  if (
+    morningEvents.length > 0 &&
+    afternoonEvents.length === 0 &&
+    eveningEvents.length === 0
+  ) {
+    advice.push(
+      "Your commitments finish in the morning. Reserve part of the afternoon for a priority task before the day loses momentum."
+    );
+  }
+
+  if (
+    morningEvents.length === 0 &&
+    afternoonEvents.length > 0
+  ) {
+    advice.push(
+      "Your morning is available. Consider completing your most demanding task before your afternoon commitments begin."
+    );
+  }
+
+  if (eveningEvents.length > 0 && workload.level === "High") {
+    advice.push(
+      "Your schedule continues into the evening. Include time to rest and prepare for tomorrow."
     );
   }
 
   if (todayEvents.length === 1) {
     advice.push(
-      "You only have one scheduled event today. Use the remaining time for preparation, exercise, study, or another personal priority."
+      "You only have one scheduled commitment today. Use the remaining time intentionally rather than leaving it unplanned."
     );
   }
 
   return advice;
 }
-
 export function buildDailyPlan(
   events,
   routes,
