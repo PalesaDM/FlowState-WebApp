@@ -282,6 +282,19 @@ export function buildDailyPlan(
   });
 }
 
+function getGreeting() {
+  const hour = new Date().getHours();
+
+  if (hour < 12) {
+    return "Good morning";
+  }
+
+  if (hour < 18) {
+    return "Good afternoon";
+  }
+
+  return "Good evening";
+}
 export function generateAssistantSummary(
   events,
   routes,
@@ -290,6 +303,33 @@ export function generateAssistantSummary(
   const nextEvent = getNextEvent(events);
   const advice = generateProductivityAdvice(events);
   const workload = calculateDailyWorkload(events);
+
+  const userName =
+  localStorage.getItem("flowstate_active_user") || "there";
+
+  const hour = new Date().getHours();
+
+  let greeting = "Good evening";
+
+  if (hour < 12) {
+    greeting = "Good morning";
+  } else if (hour < 18) {
+    greeting = "Good afternoon"
+  }
+
+  if (!nextEvent) {
+    return {
+      title: `${greeting}, ${userName}!`,
+      message:
+        "Your schedule is open today. This is a good opportunity to plan one meaningful task, work on a priority, or make time for personal development.",
+      nextEvent: null,
+      leaveTime: null,
+      travelTime: null,
+      workload,
+      advice,
+    };
+  }
+
 
   if (!nextEvent) {
     return {

@@ -141,7 +141,7 @@ export default function Dashboard() {
         {/* Daily Companion */}
         <div className="dashboard-panel">
           <p className="eyebrow">Daily Companion</p>
-          <h2 className="panel-heading">Commute Suggestion</h2>
+          <h2 className="panel-heading">Flow Assistant</h2>
 
           
        <div className="commute-suggestion">
