@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getEvents, getRoutes } from "../utils/storage";
-import { buildDailyPlan } from "../utils/aiLogic";
+import { buildDailyPlan, generateAssistantSummary, } from "../utils/aiLogic";
 
 function getWeekDates() {
   const today = new Date();
@@ -118,6 +118,7 @@ export default function Dashboard() {
   });
 
   const dailyPlan = buildDailyPlan(events, routes);
+  const assistant = generateAssistantSummary(events, routes);
   const nextEvent = dailyPlan[0];
   const upcomingEvents = dailyPlan.slice(1, 5);
   const weekDates = getWeekDates();
@@ -142,22 +143,31 @@ export default function Dashboard() {
           <p className="eyebrow">Daily Companion</p>
           <h2 className="panel-heading">Commute Suggestion</h2>
 
-          {nextEvent?.hasRoute ? (
-            <div className="commute-suggestion">
-              <h3>Leave at {nextEvent.leaveTime}</h3>
-              <p>
-                {nextEvent.travelTime} min by{" "}
-                {nextEvent.route.transportMode.toLowerCase()}
-              </p>
-              <p>{getTravelReason(nextEvent.route.transportMode)}</p>
+          
+       <div className="commute-suggestion">
+        <h3>{assistant.title}</h3>
+
+        <p>{assistant.message}</p>
+
+        {assistant.workload && (
+          <div className="assistant-workload">
+            <strong>Today's workload:</strong>{""}
+            {assistant.workload.level}
             </div>
-          ) : (
-            <p className="empty-state">
-              {nextEvent
-                ? "Add a saved route to this destination so FlowState can suggest when to leave."
-                : "No events today — nothing to plan a commute around yet."}
-            </p>
-          )}
+        )}
+
+        {assistant.advice?.length > 0 && (
+          <div className="assistant-advice">
+            <h4>Today's Advice</h4>
+
+            <ul>
+              {assistant.advice.map((tip, index) => (
+               <li key={index}>{tip}</li>
+              ))}
+            </ul>
+       </div>
+        )}
+        </div>
         </div>
 
         {/* Today's Timeline */}
