@@ -1,6 +1,7 @@
 const STORAGE_KEYS = {
   locations: "flowstate_locations",
   routes: "flowstate_routes",
+  events: "flowstate_events",
 };
 
 export function getLocations() {

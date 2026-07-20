@@ -1,12 +1,27 @@
 import { useState } from "react";
 
-export default function RouteForm({ locations, onAddRoute }) {
-  const [formData, setFormData] = useState({
-    originId: "",
-    destinationId: "",
-    travelTime: "",
-    transportMode: "",
-  });
+const EMPTY_FORM = {
+  originId: "",
+  destinationId: "",
+  transportMode: "",
+};
+
+export default function RouteForm({
+  locations,
+  onAddRoute,
+  editingRoute,
+  onUpdateRoute,
+  onCancelEdit,
+}) {
+  const [formData, setFormData] = useState(() =>
+    editingRoute
+      ? {
+          originId: editingRoute.originId,
+          destinationId: editingRoute.destinationId,
+          transportMode: editingRoute.transportMode,
+        }
+      : EMPTY_FORM
+  );
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -20,12 +35,7 @@ export default function RouteForm({ locations, onAddRoute }) {
   function handleSubmit(e) {
     e.preventDefault();
 
-    if (
-      !formData.originId ||
-      !formData.destinationId ||
-      !formData.travelTime ||
-      !formData.transportMode
-    ) {
+    if (!formData.originId || !formData.destinationId || !formData.transportMode) {
       alert("Please complete all route details.");
       return;
     }
@@ -40,31 +50,42 @@ export default function RouteForm({ locations, onAddRoute }) {
       (loc) => loc.id === formData.destinationId
     );
 
+    if (editingRoute) {
+      const updatedRoute = {
+        ...editingRoute,
+        originId: formData.originId,
+        destinationId: formData.destinationId,
+        originName: origin.name,
+        destinationName: destination.name,
+        originAddress: origin.address,
+        destinationAddress: destination.address,
+        transportMode: formData.transportMode,
+      };
+
+      onUpdateRoute(updatedRoute);
+      return;
+    }
+
     const newRoute = {
       id: crypto.randomUUID(),
       originId: formData.originId,
       destinationId: formData.destinationId,
       originName: origin.name,
       destinationName: destination.name,
-      travelTime: Number(formData.travelTime),
+      originAddress: origin.address,
+      destinationAddress: destination.address,
       transportMode: formData.transportMode,
       usageCount: 0,
       createdAt: new Date().toISOString(),
     };
 
     onAddRoute(newRoute);
-
-    setFormData({
-      originId: "",
-      destinationId: "",
-      travelTime: "",
-      transportMode: "",
-    });
+    setFormData(EMPTY_FORM);
   }
 
   return (
     <form className="location-form" onSubmit={handleSubmit}>
-      <h2>Create Saved Route</h2>
+      <h2>{editingRoute ? "Edit Saved Route" : "Create Saved Route"}</h2>
 
       <label>
         Start Location
@@ -99,18 +120,6 @@ export default function RouteForm({ locations, onAddRoute }) {
       </label>
 
       <label>
-        Usual Travel Time
-        <input
-          type="number"
-          name="travelTime"
-          placeholder="e.g. 25"
-          value={formData.travelTime}
-          onChange={handleChange}
-          min="1"
-        />
-      </label>
-
-      <label>
         Transport Mode
         <select
           name="transportMode"
@@ -123,11 +132,24 @@ export default function RouteForm({ locations, onAddRoute }) {
           <option value="Bus">Bus</option>
           <option value="Car">Car</option>
           <option value="Train">Train</option>
-          <option value="Other">Other</option>
         </select>
       </label>
 
-      <button type="submit">Save Route</button>
+      <div className="form-actions">
+        <button type="submit">
+          {editingRoute ? "Save Changes" : "Save Route"}
+        </button>
+
+        {editingRoute && (
+          <button
+            type="button"
+            className="secondary-auth-btn"
+            onClick={onCancelEdit}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 }

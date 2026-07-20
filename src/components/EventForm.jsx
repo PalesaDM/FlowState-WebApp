@@ -1,13 +1,35 @@
 import { useState } from "react";
 
-export default function EventForm({ locations, onAddEvent }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    date: "",
-    time: "",
-    category: "",
-    locationId: "",
-  });
+const EMPTY_FORM = {
+  title: "",
+  date: "",
+  time: "",
+  category: "",
+  locationId: "",
+  recurrence: "none",
+  recurrenceEndDate: "",
+};
+
+export default function EventForm({
+  locations,
+  onAddEvent,
+  editingEvent,
+  onUpdateEvent,
+  onCancelEdit,
+}) {
+  const [formData, setFormData] = useState(() =>
+    editingEvent
+      ? {
+          title: editingEvent.title,
+          date: editingEvent.date,
+          time: editingEvent.time,
+          category: editingEvent.category,
+          locationId: editingEvent.locationId,
+          recurrence: editingEvent.recurrence || "none",
+          recurrenceEndDate: editingEvent.recurrenceEndDate || "",
+        }
+      : EMPTY_FORM
+  );
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -36,6 +58,24 @@ export default function EventForm({ locations, onAddEvent }) {
       (location) => location.id === formData.locationId
     );
 
+    if (editingEvent) {
+      const updatedEvent = {
+        ...editingEvent,
+        title: formData.title,
+        date: formData.date,
+        time: formData.time,
+        category: formData.category,
+        locationId: formData.locationId,
+        locationName: selectedLocation.name,
+        recurrence: formData.recurrence,
+        recurrenceEndDate:
+          formData.recurrence === "none" ? "" : formData.recurrenceEndDate,
+      };
+
+      onUpdateEvent(updatedEvent);
+      return;
+    }
+
     const newEvent = {
       id: crypto.randomUUID(),
       title: formData.title,
@@ -44,23 +84,25 @@ export default function EventForm({ locations, onAddEvent }) {
       category: formData.category,
       locationId: formData.locationId,
       locationName: selectedLocation.name,
+      recurrence: formData.recurrence,
+      recurrenceEndDate:
+        formData.recurrence === "none" ? "" : formData.recurrenceEndDate,
       createdAt: new Date().toISOString(),
     };
 
     onAddEvent(newEvent);
-
-    setFormData({
-      title: "",
-      date: "",
-      time: "",
-      category: "",
-      locationId: "",
-    });
+    setFormData(EMPTY_FORM);
   }
 
   return (
     <form className="location-form" onSubmit={handleSubmit}>
-      <h2>Add Daily Event</h2>
+      <h2>{editingEvent ? "Edit Event" : "Add Daily Event"}</h2>
+
+      {editingEvent?.recurrence && editingEvent.recurrence !== "none" && (
+        <p className="recurrence-warning">
+          This event repeats. Changes here apply to the entire series.
+        </p>
+      )}
 
       <label>
         Event Title
@@ -123,7 +165,44 @@ export default function EventForm({ locations, onAddEvent }) {
         </select>
       </label>
 
-      <button type="submit">Save Event</button>
+      <label>
+        Repeats
+        <select
+          name="recurrence"
+          value={formData.recurrence}
+          onChange={handleChange}
+        >
+          <option value="none">Does not repeat</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+        </select>
+      </label>
+
+      {formData.recurrence !== "none" && (
+        <label>
+          Repeat Until
+          <input
+            type="date"
+            name="recurrenceEndDate"
+            value={formData.recurrenceEndDate}
+            onChange={handleChange}
+          />
+        </label>
+      )}
+
+      <div className="form-actions">
+        <button type="submit">
+          {editingEvent ? "Save Changes" : "Save Event"}
+        </button>
+
+        <button
+          type="button"
+          className="secondary-auth-btn"
+          onClick={onCancelEdit}
+        >
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }

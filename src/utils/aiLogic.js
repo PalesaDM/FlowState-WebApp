@@ -1,28 +1,35 @@
-export function getNextEvent(events) {
-  const now = new Date();
-
-  const upcomingEvents = events
-    .map((event) => ({
-      ...event,
-      dateTime: new Date(`${event.date}T${event.time}`),
-    }))
-    .filter((event) => event.dateTime >= now)
-    .sort((a, b) => a.dateTime - b.dateTime);
-
-  return upcomingEvents[0] || null;
+function getTodayDateString() {
+  return new Date().toISOString().split("T")[0];
 }
 
-export function findMatchingRoute(routes, nextEvent) {
-  if (!nextEvent) return null;
+export function estimateTravelTime(route) {
+  const mode = route.transportMode;
 
-  return routes.find(
-    (route) => route.destinationId === nextEvent.locationId
-  );
+  const sameArea =
+    route.originAddress &&
+    route.destinationAddress &&
+    route.originAddress.toLowerCase() === route.destinationAddress.toLowerCase();
+
+  if (sameArea) {
+    if (mode === "Walking") return 10;
+    if (mode === "Taxi") return 15;
+    if (mode === "Car") return 8;
+    if (mode === "Bus") return 20;
+    return 15;
+  }
+
+  if (mode === "Walking") return 35;
+  if (mode === "Taxi") return 30;
+  if (mode === "Car") return 25;
+  if (mode === "Bus") return 45;
+  if (mode === "Train") return 50;
+
+  return 30;
 }
 
-export function calculateLeaveTime(eventTime, travelTime) {
-  const eventDate = new Date(eventTime);
-  const leaveDate = new Date(eventDate.getTime() - travelTime * 60000);
+export function calculateLeaveTime(eventDate, eventTime, travelTime) {
+  const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+  const leaveDate = new Date(eventDateTime.getTime() - travelTime * 60000);
 
   return leaveDate.toLocaleTimeString([], {
     hour: "2-digit",
@@ -30,30 +37,48 @@ export function calculateLeaveTime(eventTime, travelTime) {
   });
 }
 
-export function generateSuggestion(nextEvent, matchingRoute) {
-  if (!nextEvent) {
+export function getTodayEvents(events) {
+  const today = getTodayDateString();
+
+  return events
+    .filter((event) => event.date === today)
+    .sort((a, b) => {
+      const dateA = new Date(`${a.date}T${a.time}`);
+      const dateB = new Date(`${b.date}T${b.time}`);
+      return dateA - dateB;
+    });
+}
+
+export function findRouteToEvent(routes, event) {
+  return routes.find((route) => route.destinationId === event.locationId);
+}
+
+export function buildDailyPlan(events, routes) {
+  const todayEvents = getTodayEvents(events);
+
+  return todayEvents.map((event) => {
+    const matchingRoute = findRouteToEvent(routes, event);
+
+    if (!matchingRoute) {
+      return {
+        ...event,
+        hasRoute: false,
+        travelTime: null,
+        leaveTime: null,
+        message: `You have ${event.title} at ${event.time}, but FlowState needs a saved route to ${event.locationName} before it can estimate your travel time.`,
+      };
+    }
+
+    const travelTime = estimateTravelTime(matchingRoute);
+    const leaveTime = calculateLeaveTime(event.date, event.time, travelTime);
+
     return {
-      title: "No upcoming events",
-      message:
-        "Your day is currently clear. Add an event to let FlowState help plan your next move.",
-      leaveTime: null,
+      ...event,
+      hasRoute: true,
+      route: matchingRoute,
+      travelTime,
+      leaveTime,
+      message: `Leave at ${leaveTime}. FlowState estimates a ${travelTime}-minute ${matchingRoute.transportMode.toLowerCase()} trip to ${event.locationName}.`,
     };
-  }
-
-  if (!matchingRoute) {
-    return {
-      title: "Route needed",
-      message: `You have ${nextEvent.title} at ${nextEvent.time}, but FlowState does not yet have a saved route to ${nextEvent.locationName}. Add a route so the app can calculate when you should leave.`,
-      leaveTime: null,
-    };
-  }
-
-  const eventDateTime = `${nextEvent.date}T${nextEvent.time}`;
-  const leaveTime = calculateLeaveTime(eventDateTime, matchingRoute.travelTime);
-
-  return {
-    title: "AI Daily Suggestion",
-    leaveTime,
-    message: `Leave at ${leaveTime} because ${nextEvent.title} starts at ${nextEvent.time}, and your usual travel time to ${nextEvent.locationName} is ${matchingRoute.travelTime} minutes.`,
-  };
+  });
 }
