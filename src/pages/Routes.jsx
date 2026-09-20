@@ -193,6 +193,11 @@ export default function Routes() {
                 )}
               </>
             )}
+
+            <p className="empty-state" style={{ fontSize: "0.8rem", marginTop: "10px" }}>
+              Travel times are calculated when a route is saved. Edit and
+              re-save a route to refresh its estimate.
+            </p>
           </div>
         </aside>
       </div>

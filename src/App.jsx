@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 
 import "./styles/global.css";
 
+
 export default function App() {
   return (
     <BrowserRouter basename="/FlowState-WebApp">

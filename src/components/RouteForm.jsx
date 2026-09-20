@@ -1,38 +1,23 @@
 import { useState } from "react";
+import { getLiveTravelTime } from "../utils/routing";
+import { estimateTravelTime } from "../utils/aiLogic";
 
-const EMPTY_FORM = {
-  originId: "",
-  destinationId: "",
-  transportMode: "",
-};
+const EMPTY_FORM = { originId: "", destinationId: "", transportMode: "" };
 
-export default function RouteForm({
-  locations,
-  onAddRoute,
-  editingRoute,
-  onUpdateRoute,
-  onCancelEdit,
-}) {
+export default function RouteForm({ locations, onAddRoute, editingRoute, onUpdateRoute, onCancelEdit }) {
   const [formData, setFormData] = useState(() =>
     editingRoute
-      ? {
-          originId: editingRoute.originId,
-          destinationId: editingRoute.destinationId,
-          transportMode: editingRoute.transportMode,
-        }
+      ? { originId: editingRoute.originId, destinationId: editingRoute.destinationId, transportMode: editingRoute.transportMode }
       : EMPTY_FORM
   );
+  const [isSaving, setIsSaving] = useState(false);
 
   function handleChange(e) {
     const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
     if (!formData.originId || !formData.destinationId || !formData.transportMode) {
@@ -46,28 +31,16 @@ export default function RouteForm({
     }
 
     const origin = locations.find((loc) => loc.id === formData.originId);
-    const destination = locations.find(
-      (loc) => loc.id === formData.destinationId
-    );
+    const destination = locations.find((loc) => loc.id === formData.destinationId);
 
-    if (editingRoute) {
-      const updatedRoute = {
-        ...editingRoute,
-        originId: formData.originId,
-        destinationId: formData.destinationId,
-        originName: origin.name,
-        destinationName: destination.name,
-        originAddress: origin.address,
-        destinationAddress: destination.address,
-        transportMode: formData.transportMode,
-      };
+    setIsSaving(true);
 
-      onUpdateRoute(updatedRoute);
-      return;
-    }
+    const originCoords = origin.lat && origin.lng ? { lat: origin.lat, lng: origin.lng } : null;
+    const destinationCoords = destination.lat && destination.lng ? { lat: destination.lat, lng: destination.lng } : null;
 
-    const newRoute = {
-      id: crypto.randomUUID(),
+    const liveTravelTime = await getLiveTravelTime(originCoords, destinationCoords, formData.transportMode);
+
+    const routeData = {
       originId: formData.originId,
       destinationId: formData.destinationId,
       originName: origin.name,
@@ -75,12 +48,26 @@ export default function RouteForm({
       originAddress: origin.address,
       destinationAddress: destination.address,
       transportMode: formData.transportMode,
-      usageCount: 0,
-      createdAt: new Date().toISOString(),
+      estimatedTravelTimeMin:
+        liveTravelTime ??
+        estimateTravelTime({
+          transportMode: formData.transportMode,
+          originAddress: origin.address,
+          destinationAddress: destination.address,
+        }),
+      travelTimeSource: liveTravelTime !== null ? "live" : "estimated",
     };
 
+    if (editingRoute) {
+      onUpdateRoute({ ...editingRoute, ...routeData });
+      setIsSaving(false);
+      return;
+    }
+
+    const newRoute = { id: crypto.randomUUID(), ...routeData, usageCount: 0, createdAt: new Date().toISOString() };
     onAddRoute(newRoute);
     setFormData(EMPTY_FORM);
+    setIsSaving(false);
   }
 
   return (
@@ -89,43 +76,27 @@ export default function RouteForm({
 
       <label>
         Start Location
-        <select
-          name="originId"
-          value={formData.originId}
-          onChange={handleChange}
-        >
+        <select name="originId" value={formData.originId} onChange={handleChange}>
           <option value="">Select start location</option>
           {locations.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.name}
-            </option>
+            <option key={location.id} value={location.id}>{location.name}</option>
           ))}
         </select>
       </label>
 
       <label>
         Destination
-        <select
-          name="destinationId"
-          value={formData.destinationId}
-          onChange={handleChange}
-        >
+        <select name="destinationId" value={formData.destinationId} onChange={handleChange}>
           <option value="">Select destination</option>
           {locations.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.name}
-            </option>
+            <option key={location.id} value={location.id}>{location.name}</option>
           ))}
         </select>
       </label>
 
       <label>
         Transport Mode
-        <select
-          name="transportMode"
-          value={formData.transportMode}
-          onChange={handleChange}
-        >
+        <select name="transportMode" value={formData.transportMode} onChange={handleChange}>
           <option value="">Select transport mode</option>
           <option value="Walking">Walking</option>
           <option value="Taxi">Taxi</option>
@@ -136,18 +107,11 @@ export default function RouteForm({
       </label>
 
       <div className="form-actions">
-        <button type="submit">
-          {editingRoute ? "Save Changes" : "Save Route"}
+        <button type="submit" disabled={isSaving}>
+          {isSaving ? "Calculating route..." : editingRoute ? "Save Changes" : "Save Route"}
         </button>
-
         {editingRoute && (
-          <button
-            type="button"
-            className="secondary-auth-btn"
-            onClick={onCancelEdit}
-          >
-            Cancel
-          </button>
+          <button type="button" className="secondary-auth-btn" onClick={onCancelEdit}>Cancel</button>
         )}
       </div>
     </form>

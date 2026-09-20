@@ -1,9 +1,13 @@
 function getTodayDateString() {
   return new Date().toISOString().split("T")[0];
 }
-
 export function estimateTravelTime(route) {
+  if (typeof route.estimatedTravelTimeMin === "number") {
+    return route.estimatedTravelTimeMin;
+  }
+
   const mode = route.transportMode;
+  
 
   const sameArea =
     route.originAddress &&
