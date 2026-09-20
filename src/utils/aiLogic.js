@@ -319,6 +319,7 @@ export function generateProductivityAdvice(events) {
 
   return advice;
 }
+
 export function buildDailyPlan(
   events,
   routes,
@@ -372,6 +373,7 @@ function getGreeting() {
 
   return "Good evening";
 }
+
 export function generateAssistantSummary(
   events,
   routes,
@@ -382,37 +384,15 @@ export function generateAssistantSummary(
   const workload = calculateDailyWorkload(events);
 
   const userName =
-  localStorage.getItem("flowstate_active_user") || "there";
+    localStorage.getItem("flowstate_active_user") || "there";
 
-  const hour = new Date().getHours();
-
-  let greeting = "Good evening";
-
-  if (hour < 12) {
-    greeting = "Good morning";
-  } else if (hour < 18) {
-    greeting = "Good afternoon"
-  }
+  const greeting = getGreeting();
 
   if (!nextEvent) {
     return {
       title: `${greeting}, ${userName}!`,
       message:
         "Your schedule is open today. This is a good opportunity to plan one meaningful task, work on a priority, or make time for personal development.",
-      nextEvent: null,
-      leaveTime: null,
-      travelTime: null,
-      workload,
-      advice,
-    };
-  }
-
-
-  if (!nextEvent) {
-    return {
-      title: "Your schedule is clear",
-      message:
-        "You have no upcoming events. Consider using the available time to plan your next priority.",
       nextEvent: null,
       leaveTime: null,
       travelTime: null,
