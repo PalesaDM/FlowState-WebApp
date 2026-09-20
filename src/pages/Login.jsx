@@ -22,25 +22,33 @@ export default function Login() {
   }
 
   function handleLogin(e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!formData.email || !formData.password) {
-      alert("Please enter your email and password.");
-      return;
-    }
-
-    const savedUser = JSON.parse(localStorage.getItem("flowstate_user"));
-
-    if (!savedUser) {
-      alert("No account found. Please sign up first.");
-      setMode("signup");
-      return;
-    }
-
-    localStorage.setItem("flowstate_active_user", savedUser.name);
-
-    navigate("/dashboard");
+  if (!formData.email || !formData.password) {
+    alert("Please enter your email and password.");
+    return;
   }
+
+  const savedUser = JSON.parse(localStorage.getItem("flowstate_user"));
+
+  if (!savedUser) {
+    alert("No account found. Please sign up first.");
+    setMode("signup");
+    return;
+  }
+
+  if (
+    savedUser.email !== formData.email ||
+    savedUser.password !== formData.password
+  ) {
+    alert("Incorrect email or password.");
+    return;
+  }
+
+  localStorage.setItem("flowstate_active_user", savedUser.name);
+
+  navigate("/dashboard");
+}
 
   function handleSignup(e) {
     e.preventDefault();

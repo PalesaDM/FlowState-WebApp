@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard" },
@@ -8,6 +8,13 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    localStorage.removeItem("flowstate_active_user");
+    navigate("/");
+  }
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
@@ -21,6 +28,10 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      <button className="sidebar-link secondary-auth-btn" onClick={handleLogout}>
+        Logout
+      </button>
     </aside>
   );
 }
