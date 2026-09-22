@@ -1,15 +1,34 @@
 import { useState } from "react";
 import { getLiveTravelTime } from "../utils/routing";
 import { estimateTravelTime } from "../utils/aiLogic";
+import { getProfile } from "../utils/profile";
 import FormError from "./FormError";
 
-const EMPTY_FORM = { originId: "", destinationId: "", transportMode: "" };
+function getEmptyForm() {
+  const profile = getProfile();
 
-export default function RouteForm({ locations, onAddRoute, editingRoute, onUpdateRoute, onCancelEdit }) {
+  return {
+    originId: "",
+    destinationId: "",
+    transportMode: profile.preferredTransport || "Car",
+  };
+}
+
+export default function RouteForm({
+  locations,
+  onAddRoute,
+  editingRoute,
+  onUpdateRoute,
+  onCancelEdit,
+}) {
   const [formData, setFormData] = useState(() =>
     editingRoute
-      ? { originId: editingRoute.originId, destinationId: editingRoute.destinationId, transportMode: editingRoute.transportMode }
-      : EMPTY_FORM
+      ? {
+          originId: editingRoute.originId,
+          destinationId: editingRoute.destinationId,
+          transportMode: editingRoute.transportMode,
+        }
+      : getEmptyForm()
   );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -70,7 +89,7 @@ export default function RouteForm({ locations, onAddRoute, editingRoute, onUpdat
 
     const newRoute = { id: crypto.randomUUID(), ...routeData, usageCount: 0, createdAt: new Date().toISOString() };
     onAddRoute(newRoute);
-    setFormData(EMPTY_FORM);
+    setFormData(getEmptyForm());
     setIsSaving(false);
   }
 

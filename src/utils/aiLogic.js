@@ -1,3 +1,5 @@
+import { getProfile } from "./profile";
+
 function getTodayDateString() {
   return new Date().toISOString().split("T")[0];
 }
@@ -209,25 +211,36 @@ export function calculateDailyWorkload(events) {
   };
 }
 
-export function generateProductivityAdvice(events) {
+export function generateProductivityAdvice(events, productivityGoal = "") {
   const todayEvents = getTodayEvents(events);
   const gaps = detectScheduleGaps(events);
   const backToBackEvents = detectBackToBackEvents(events);
   const workload = calculateDailyWorkload(events);
 
   const advice = [];
+  if (productivityGoal.trim()) {
+    advice.push(
+      `Your current productivty goal is: "${productivityGoal}". Look for an available part of your day to make progress on it.`
+    );
+  }
 
   if (todayEvents.length === 0) {
-    advice.push(
-      "Your calendar is open today. Choose one important task and give it a clear time slot."
-    );
+  advice.push(
+    "Your calendar is open today. Choose one important task and give it a clear time slot."
+  );
 
+  if (productivityGoal.trim()) {
+    advice.push(
+      `This could be a good opportunity to work towards your goal: "${productivityGoal}".`
+    );
+  } else {
     advice.push(
       "Consider scheduling time for study, exercise, administration, or personal development."
     );
-
-    return advice;
   }
+
+  return advice;
+}
 
   if (workload.level === "High") {
     advice.push(
@@ -320,7 +333,11 @@ export function generateProductivityAdvice(events) {
       "You only have one scheduled commitment today. Use the remaining time intentionally rather than leaving it unplanned."
     );
   }
-
+  if (productivityGoal.trim()) {
+    advice.push(
+      `Keep your productivity goal in mind today: "${productivityGoal}". Use any suitable free period to make progress on it.`
+    );
+  }
   return advice;
 }
 
@@ -384,19 +401,37 @@ export function generateAssistantSummary(
   bufferMinutes = 10
 ) {
   const nextEvent = getNextEvent(events);
-  const advice = generateProductivityAdvice(events);
+  const todayEvents = getTodayEvents(events);
+  const profile = getProfile();
+
+  const advice = generateProductivityAdvice(
+    events,
+    profile.productivityGoal
+  );
+
   const workload = calculateDailyWorkload(events);
 
-  const userName =
-    localStorage.getItem("flowstate_active_user") || "there";
-
+  const userName = profile.name || "there";
   const greeting = getGreeting();
 
-  if (!nextEvent) {
+  if (!nextEvent && todayEvents.length === 0) {
     return {
       title: `${greeting}, ${userName}!`,
       message:
         "Your schedule is open today. This is a good opportunity to plan one meaningful task, work on a priority, or make time for personal development.",
+      nextEvent: null,
+      leaveTime: null,
+      travelTime: null,
+      workload,
+      advice,
+    };
+  }
+
+  if (!nextEvent && todayEvents.length > 0) {
+    return {
+      title: `${greeting}, ${userName}!`,
+      message:
+        "You have completed your scheduled commitments for today. Review what you achieved and use the remaining time to wind down, prepare for tomorrow, or make progress on a personal goal.",
       nextEvent: null,
       leaveTime: null,
       travelTime: null,

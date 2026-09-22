@@ -5,6 +5,7 @@ const EMPTY_FORM = {
   title: "",
   date: "",
   time: "",
+  duration: 60,
   category: "",
   locationId: "",
   recurrence: "none",
@@ -24,6 +25,7 @@ export default function EventForm({
           title: editingEvent.title,
           date: editingEvent.date,
           time: editingEvent.time,
+          duration: editingEvent.duration || 60,
           category: editingEvent.category,
           locationId: editingEvent.locationId,
           recurrence: editingEvent.recurrence || "none",
@@ -38,7 +40,7 @@ export default function EventForm({
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === "duration" ? Number(value) : value,
     }));
 
     if (error) setError("");
@@ -74,6 +76,7 @@ export default function EventForm({
         title: formData.title,
         date: formData.date,
         time: formData.time,
+        duration: formData.duration,
         category: formData.category,
         locationId: formData.locationId,
         locationName: selectedLocation.name,
@@ -91,6 +94,7 @@ export default function EventForm({
       title: formData.title,
       date: formData.date,
       time: formData.time,
+      duration: formData.duration,
       category: formData.category,
       locationId: formData.locationId,
       locationName: selectedLocation.name,
@@ -145,6 +149,23 @@ export default function EventForm({
           value={formData.time}
           onChange={handleChange}
         />
+      </label>
+
+      <label>
+        Duration
+        <select
+          name="duration"
+          value={formData.duration}
+          onChange={handleChange}
+          >
+
+            <option value={30}>30 minutes</option>
+            <option value={45}>45 minutes</option>
+            <option value={60}>1 hour</option>
+            <option value={90}>1 hour 30 minutes</option>
+            <option value={120}>2 hours</option>
+            <option value={180}>3 hours</option>
+        </select>
       </label>
 
       <label>

@@ -1,8 +1,13 @@
 import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import LocationForm from "../components/LocationForm";
 import { getLocations, saveLocations } from "../utils/storage";
 
 export default function Locations() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
+
   const [locations, setLocations] = useState(() => getLocations());
   const [editingLocation, setEditingLocation] = useState(null);
 
@@ -10,6 +15,10 @@ export default function Locations() {
     const updatedLocations = [...locations, newLocation];
     setLocations(updatedLocations);
     saveLocations(updatedLocations);
+
+    if (returnTo) {
+      navigate(returnTo);
+    }
   }
 
   function handleUpdateLocation(updatedLocation) {
@@ -20,6 +29,10 @@ export default function Locations() {
     setLocations(updatedLocations);
     saveLocations(updatedLocations);
     setEditingLocation(null);
+
+    if (returnTo) {
+      navigate(returnTo);
+    }
   }
 
   function handleDeleteLocation(id) {

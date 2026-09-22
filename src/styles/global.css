@@ -1103,3 +1103,13 @@ a {
     text-align: left;
   }
 }
+.location-required-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.location-required-state p {
+  margin: 0;
+}
