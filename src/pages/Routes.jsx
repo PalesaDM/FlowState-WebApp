@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import RouteForm from "../components/RouteForm";
 import {
   getLocations,
@@ -11,6 +12,7 @@ export default function Routes() {
   const [locations] = useState(() => getLocations());
   const [routes, setRoutes] = useState(() => getRoutes());
   const [editingRoute, setEditingRoute] = useState(null);
+  const formRef = useRef(null);
 
   function handleAddRoute(newRoute) {
     const updatedRoutes = [...routes, newRoute];
@@ -40,6 +42,9 @@ export default function Routes() {
 
   function handleEditRoute(route) {
     setEditingRoute(route);
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   function handleCancelEdit() {
@@ -83,23 +88,39 @@ export default function Routes() {
 
       <div className="routes-layout">
         <div className="routes-main">
-          {locations.length < 2 ? (
-            <p className="empty-state">
-              You need at least two saved locations before creating a route.
-            </p>
-          ) : (
-            <RouteForm
-              key={editingRoute?.id ?? "new"}
-              locations={locations}
-              editingRoute={editingRoute}
-              onAddRoute={handleAddRoute}
-              onUpdateRoute={handleUpdateRoute}
-              onCancelEdit={handleCancelEdit}
-            />
-          )}
+          <div ref={formRef}>
+            {locations.length < 2 ? (
+              <p className="empty-state">
+                You need at least two saved locations before creating a route.{" "}
+                <Link to="/locations" style={{ fontWeight: 700, color: "#637452" }}>
+                  Add a location →
+                </Link>
+              </p>
+            ) : (
+              <RouteForm
+                key={editingRoute?.id ?? "new"}
+                locations={locations}
+                editingRoute={editingRoute}
+                onAddRoute={handleAddRoute}
+                onUpdateRoute={handleUpdateRoute}
+                onCancelEdit={handleCancelEdit}
+              />
+            )}
+          </div>
 
           <section className="location-list">
-            <h2>Your Saved Routes</h2>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h2>Your Saved Routes</h2>
+              <Link to="/locations" className="secondary-auth-btn" style={{ padding: "10px 16px", borderRadius: "12px", fontWeight: 700 }}>
+                + Add Location
+              </Link>
+            </div>
 
             {routes.length === 0 ? (
               <p className="empty-state">
@@ -114,6 +135,22 @@ export default function Routes() {
                     </h3>
 
                     <p>{route.transportMode}</p>
+
+                    {typeof route.estimatedTravelTimeMin === "number" && (
+                      <p
+                        className="empty-state"
+                        style={{
+                          padding: "6px 10px",
+                          display: "inline-block",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        {route.estimatedTravelTimeMin} min
+                        {route.travelTimeSource === "live"
+                          ? " · live traffic data"
+                          : " · estimated"}
+                      </p>
+                    )}
 
                     <small>
                       FlowState will estimate travel time based on this route

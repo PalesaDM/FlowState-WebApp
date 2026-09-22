@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import FormError from "../components/FormError";
 
 export default function Login() {
   const [mode, setMode] = useState("login");
@@ -10,6 +11,8 @@ export default function Login() {
     password: "",
   });
 
+  const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
   function handleChange(e) {
@@ -19,42 +22,46 @@ export default function Login() {
       ...prev,
       [name]: value,
     }));
+
+    if (error) setError("");
   }
 
   function handleLogin(e) {
-  e.preventDefault();
+    e.preventDefault();
+    setError("");
 
-  if (!formData.email || !formData.password) {
-    alert("Please enter your email and password.");
-    return;
+    if (!formData.email.trim() || !formData.password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+
+    const savedUser = JSON.parse(localStorage.getItem("flowstate_user"));
+
+    if (!savedUser) {
+      setError("No account found. Please sign up first.");
+      setMode("signup");
+      return;
+    }
+
+    if (
+      savedUser.email !== formData.email ||
+      savedUser.password !== formData.password
+    ) {
+      setError("Incorrect email or password.");
+      return;
+    }
+
+    localStorage.setItem("flowstate_active_user", savedUser.name);
+
+    navigate("/dashboard");
   }
-
-  const savedUser = JSON.parse(localStorage.getItem("flowstate_user"));
-
-  if (!savedUser) {
-    alert("No account found. Please sign up first.");
-    setMode("signup");
-    return;
-  }
-
-  if (
-    savedUser.email !== formData.email ||
-    savedUser.password !== formData.password
-  ) {
-    alert("Incorrect email or password.");
-    return;
-  }
-
-  localStorage.setItem("flowstate_active_user", savedUser.name);
-
-  navigate("/dashboard");
-}
 
   function handleSignup(e) {
     e.preventDefault();
+    setError("");
 
-    if (!formData.name || !formData.email || !formData.password) {
-      alert("Please complete all sign up details.");
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password) {
+      setError("Please complete all sign up details.");
       return;
     }
 
@@ -85,18 +92,26 @@ export default function Login() {
         <div className="auth-tabs">
           <button
             className={mode === "login" ? "active-auth-tab" : ""}
-            onClick={() => setMode("login")}
+            onClick={() => {
+              setMode("login");
+              setError("");
+            }}
           >
             Login
           </button>
 
           <button
             className={mode === "signup" ? "active-auth-tab" : ""}
-            onClick={() => setMode("signup")}
+            onClick={() => {
+              setMode("signup");
+              setError("");
+            }}
           >
             Sign Up
           </button>
         </div>
+
+        <FormError message={error} />
 
         {mode === "login" ? (
           <form onSubmit={handleLogin}>

@@ -4,12 +4,22 @@ import { getLocations, saveLocations } from "../utils/storage";
 
 export default function Locations() {
   const [locations, setLocations] = useState(() => getLocations());
+  const [editingLocation, setEditingLocation] = useState(null);
 
   function handleAddLocation(newLocation) {
     const updatedLocations = [...locations, newLocation];
+    setLocations(updatedLocations);
+    saveLocations(updatedLocations);
+  }
+
+  function handleUpdateLocation(updatedLocation) {
+    const updatedLocations = locations.map((location) =>
+      location.id === updatedLocation.id ? updatedLocation : location
+    );
 
     setLocations(updatedLocations);
     saveLocations(updatedLocations);
+    setEditingLocation(null);
   }
 
   function handleDeleteLocation(id) {
@@ -17,6 +27,18 @@ export default function Locations() {
 
     setLocations(updatedLocations);
     saveLocations(updatedLocations);
+
+    if (editingLocation?.id === id) {
+      setEditingLocation(null);
+    }
+  }
+
+  function handleEditLocation(location) {
+    setEditingLocation(location);
+  }
+
+  function handleCancelEdit() {
+    setEditingLocation(null);
   }
 
   return (
@@ -30,7 +52,13 @@ export default function Locations() {
         </p>
       </section>
 
-      <LocationForm onAddLocation={handleAddLocation} />
+      <LocationForm
+        key={editingLocation?.id ?? "new"}
+        onAddLocation={handleAddLocation}
+        editingLocation={editingLocation}
+        onUpdateLocation={handleUpdateLocation}
+        onCancelEdit={handleCancelEdit}
+      />
 
       <section className="location-list">
         <h2>Your Saved Places</h2>
@@ -47,12 +75,21 @@ export default function Locations() {
                 <p>{location.category}</p>
                 <small>{location.address}</small>
 
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDeleteLocation(location.id)}
-                >
-                  Delete
-                </button>
+                <div className="route-actions">
+                  <button
+                    className="edit-btn"
+                    onClick={() => handleEditLocation(location)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDeleteLocation(location.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </article>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import FormError from "./FormError";
 
 const EMPTY_FORM = {
   title: "",
@@ -30,6 +31,7 @@ export default function EventForm({
         }
       : EMPTY_FORM
   );
+  const [error, setError] = useState("");
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -38,19 +40,27 @@ export default function EventForm({
       ...prev,
       [name]: value,
     }));
+
+    if (error) setError("");
   }
 
   function handleSubmit(e) {
     e.preventDefault();
+    setError("");
 
     if (
-      !formData.title ||
+      !formData.title.trim() ||
       !formData.date ||
       !formData.time ||
       !formData.category ||
       !formData.locationId
     ) {
-      alert("Please complete all event details.");
+      setError("Please complete all event details.");
+      return;
+    }
+
+    if (formData.recurrence !== "none" && !formData.recurrenceEndDate) {
+      setError("Please choose an end date for this repeating event.");
       return;
     }
 
@@ -103,6 +113,8 @@ export default function EventForm({
           This event repeats. Changes here apply to the entire series.
         </p>
       )}
+
+      <FormError message={error} />
 
       <label>
         Event Title

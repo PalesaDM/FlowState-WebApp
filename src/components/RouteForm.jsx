@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getLiveTravelTime } from "../utils/routing";
 import { estimateTravelTime } from "../utils/aiLogic";
+import FormError from "./FormError";
 
 const EMPTY_FORM = { originId: "", destinationId: "", transportMode: "" };
 
@@ -11,22 +12,25 @@ export default function RouteForm({ locations, onAddRoute, editingRoute, onUpdat
       : EMPTY_FORM
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
 
   function handleChange(e) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (error) setError("");
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setError("");
 
     if (!formData.originId || !formData.destinationId || !formData.transportMode) {
-      alert("Please complete all route details.");
+      setError("Please complete all route details.");
       return;
     }
 
     if (formData.originId === formData.destinationId) {
-      alert("Start and destination cannot be the same.");
+      setError("Start and destination cannot be the same.");
       return;
     }
 
@@ -73,6 +77,8 @@ export default function RouteForm({ locations, onAddRoute, editingRoute, onUpdat
   return (
     <form className="location-form" onSubmit={handleSubmit}>
       <h2>{editingRoute ? "Edit Saved Route" : "Create Saved Route"}</h2>
+
+      <FormError message={error} />
 
       <label>
         Start Location
