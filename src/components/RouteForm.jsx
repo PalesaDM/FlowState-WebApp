@@ -1,11 +1,15 @@
 import { useState } from "react";
+import { getProfile } from "../utils/profile";
 
-const EMPTY_FORM = {
-  originId: "",
-  destinationId: "",
-  transportMode: "",
-};
+function getEmptyForm() {
+  const profile = getProfile();
 
+  return {
+    originId: "",
+    destinationId: "",
+    transportMode: profile.preferredTransport || "Car",
+  };
+}
 export default function RouteForm({
   locations,
   onAddRoute,
@@ -13,15 +17,15 @@ export default function RouteForm({
   onUpdateRoute,
   onCancelEdit,
 }) {
-  const [formData, setFormData] = useState(() =>
-    editingRoute
-      ? {
-          originId: editingRoute.originId,
-          destinationId: editingRoute.destinationId,
-          transportMode: editingRoute.transportMode,
-        }
-      : EMPTY_FORM
-  );
+const [formData, setFormData] = useState(() =>
+  editingRoute
+    ? {
+        originId: editingRoute.originId,
+        destinationId: editingRoute.destinationId,
+        transportMode: editingRoute.transportMode,
+      }
+    : getEmptyForm()
+);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -80,7 +84,7 @@ export default function RouteForm({
     };
 
     onAddRoute(newRoute);
-    setFormData(EMPTY_FORM);
+    setFormData(getEmptyForm());
   }
 
   return (
