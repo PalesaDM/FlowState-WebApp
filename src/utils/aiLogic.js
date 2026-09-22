@@ -397,24 +397,37 @@ export function generateAssistantSummary(
   bufferMinutes = 10
 ) {
   const nextEvent = getNextEvent(events);
+  const todayEvents = getTodayEvents(events);
   const profile = getProfile();
 
   const advice = generateProductivityAdvice(
-  events,
-  profile.productivityGoal
-);
+    events,
+    profile.productivityGoal
+  );
 
   const workload = calculateDailyWorkload(events);
 
   const userName = profile.name || "there";
-
   const greeting = getGreeting();
 
-  if (!nextEvent) {
+  if (!nextEvent && todayEvents.length === 0) {
     return {
       title: `${greeting}, ${userName}!`,
       message:
         "Your schedule is open today. This is a good opportunity to plan one meaningful task, work on a priority, or make time for personal development.",
+      nextEvent: null,
+      leaveTime: null,
+      travelTime: null,
+      workload,
+      advice,
+    };
+  }
+
+  if (!nextEvent && todayEvents.length > 0) {
+    return {
+      title: `${greeting}, ${userName}!`,
+      message:
+        "You have completed your scheduled commitments for today. Review what you achieved and use the remaining time to wind down, prepare for tomorrow, or make progress on a personal goal.",
       nextEvent: null,
       leaveTime: null,
       travelTime: null,
