@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getEvents, getRoutes } from "../utils/storage";
 import { buildDailyPlan, generateAssistantSummary, } from "../utils/aiLogic";
+import { getProfile } from "../utils/profile";
 
 function getWeekDates() {
   const today = new Date();
@@ -105,20 +106,38 @@ export default function Dashboard() {
     };
   }, []);
 
+  const profile = getProfile();
+
   const currentHour = new Date().getHours();
   let greeting = "Good Evening";
-  if (currentHour < 12) greeting = "Good Morning";
-  else if (currentHour < 18) greeting = "Good Afternoon";
 
-  const userName = localStorage.getItem("flowstate_active_user") || "User";
+  if (currentHour < 12) {
+    greeting = "Good Morning";
+  } else if (currentHour < 18) {
+    greeting = "Good Afternoon";
+  }
+
+  const userName = 
+  profile.name ||
+  localStorage.getItem("flowstate_active_user") ||
+  "User";
+
   const todayLabel = new Date().toLocaleDateString([], {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
 
-  const dailyPlan = buildDailyPlan(events, routes);
-  const assistant = generateAssistantSummary(events, routes);
+  const dailyPlan = buildDailyPlan(
+    events,
+    routes,
+    profile.travelBuffer
+  );
+  const assistant = generateAssistantSummary(
+    events, 
+    routes,
+    profile.travelBuffer
+);
   const nextEvent = dailyPlan[0];
   const upcomingEvents = dailyPlan.slice(1, 5);
   const weekDates = getWeekDates();
