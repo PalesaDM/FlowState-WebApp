@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import EventForm from "../components/EventForm";
 import { getLocations, getEvents, saveEvents } from "../utils/storage";
 import {
@@ -326,20 +327,29 @@ export default function Calendar() {
           {showForm && (
             <div ref={formRef} className="event-form-wrapper">
               {locations.length === 0 ? (
-                <p className="empty-state">
-                  You need to add at least one saved location before creating
-                  an event.
-                </p>
-              ) : (
-                <EventForm
-                  key={editingEvent?.id ?? "new"}
-                  locations={locations}
-                  editingEvent={editingEvent}
-                  onAddEvent={handleAddEvent}
-                  onUpdateEvent={handleUpdateEvent}
-                  onCancelEdit={handleCloseForm}
-                />
-              )}
+  <div className="empty-state location-required-state">
+    <p>
+      This event needs a linked location. Add a location first and 
+      FlowState will bring you back here to continue planning.
+    </p>
+
+    <Link
+      className="quick-action-btn"
+      to="/locations?returnTo=/calendar"
+    >
+      + Add a Location
+    </Link>
+  </div>
+) : (
+  <EventForm
+    key={editingEvent?.id ?? "new"}
+    locations={locations}
+    editingEvent={editingEvent}
+    onAddEvent={handleAddEvent}
+    onUpdateEvent={handleUpdateEvent}
+    onCancelEdit={handleCloseForm}
+  />
+)}
             </div>
           )}
         </div>
