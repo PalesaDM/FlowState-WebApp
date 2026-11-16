@@ -1,7 +1,9 @@
 import { getProfile } from "./profile";
+import { toLocalDateString } from "./date";
+import { expandRecurringEvents } from "./calendarLogic";
 
 function getTodayDateString() {
-  return new Date().toISOString().split("T")[0];
+  return toLocalDateString();
 }
 export function estimateTravelTime(route) {
   if (typeof route.estimatedTravelTimeMin === "number") {
@@ -59,8 +61,20 @@ export function calculateLeaveTime(
 export function getTodayEvents(events) {
   const today = getTodayDateString();
 
-  return events
-    .filter((event) => event.date === today)
+  const rangeStart = new Date(`${today}T00:00`);
+  const rangeEnd = new Date(`${today}T23:59:59.999`);
+
+  const todayOccurrences = expandRecurringEvents(
+    events,
+    rangeStart,
+    rangeEnd
+  );
+
+  return todayOccurrences
+    .map((event) => ({
+      ...event,
+      date: event.occurrenceDate,
+    }))
     .sort((a, b) => {
       const dateA = new Date(`${a.date}T${a.time}`);
       const dateB = new Date(`${b.date}T${b.time}`);
@@ -68,6 +82,7 @@ export function getTodayEvents(events) {
       return dateA - dateB;
     });
 }
+
 
 export function getUpcomingEvents(events) {
   const now = new Date();
@@ -218,11 +233,7 @@ export function generateProductivityAdvice(events, productivityGoal = "") {
   const workload = calculateDailyWorkload(events);
 
   const advice = [];
-  if (productivityGoal.trim()) {
-    advice.push(
-      `Your current productivty goal is: "${productivityGoal}". Look for an available part of your day to make progress on it.`
-    );
-  }
+  
 
   if (todayEvents.length === 0) {
   advice.push(
@@ -411,7 +422,10 @@ export function generateAssistantSummary(
 
   const workload = calculateDailyWorkload(events);
 
-  const userName = profile.name || "there";
+  const userName = 
+  profile.name ||
+  localStorage.getItem("flowstate_active_user") ||
+  "User";
   const greeting = getGreeting();
 
   if (!nextEvent && todayEvents.length === 0) {

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -11,14 +12,19 @@ import Profile from "./pages/Profile";
 
 import "./styles/global.css";
 
-
 export default function App() {
   return (
     <BrowserRouter basename="/FlowState-WebApp">
       <Routes>
         <Route path="/" element={<Login />} />
 
-        <Route element={<Layout />}>
+        <Route
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/locations" element={<Locations />} />
           <Route path="/routes" element={<RoutesPage />} />

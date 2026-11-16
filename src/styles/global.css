@@ -1113,3 +1113,39 @@ a {
 .location-required-state p {
   margin: 0;
 }
+@media (max-width: 768px) {
+  .calendar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-main {
+    min-width: 0;
+  }
+
+  .month-grid,
+  .week-view {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+  }
+
+  .month-grid {
+    min-width: 720px;
+  }
+
+  .week-view {
+    min-width: 720px;
+  }
+
+  .calendar-controls {
+    align-items: stretch;
+  }
+
+  .calendar-nav {
+    flex-wrap: wrap;
+  }
+
+  .calendar-sidebar {
+    width: 100%;
+  }
+}

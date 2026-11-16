@@ -1,32 +1,8 @@
 import { useState } from "react";
-
-const defaultProfile = {
-  name: "",
-  email: "",
-  preferredTransport: "Car",
-  travelBuffer: 10,
-  productivityGoal: "",
-};
-
-function getSavedProfile() {
-  const savedProfile = localStorage.getItem("flowstate_user_profile");
-
-  if (!savedProfile) {
-    return defaultProfile;
-  }
-
-  try {
-    return {
-      ...defaultProfile,
-      ...JSON.parse(savedProfile),
-    };
-  } catch {
-    return defaultProfile;
-  }
-}
+import { getProfile } from "../utils/profile";
 
 export default function Profile() {
-  const [profile, setProfile] = useState(getSavedProfile);
+  const [profile, setProfile] = useState(() => getProfile());
   const [isEditing, setIsEditing] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
@@ -61,7 +37,7 @@ export default function Profile() {
   }
 
   function handleCancel() {
-    setProfile(getSavedProfile());
+    setProfile(getProfile());
     setIsEditing(false);
     setSaveMessage("");
   }

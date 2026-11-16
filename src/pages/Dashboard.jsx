@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { getEvents, getRoutes } from "../utils/storage";
 import { buildDailyPlan, generateAssistantSummary, } from "../utils/aiLogic";
 import { getProfile } from "../utils/profile";
+import { toLocalDateString } from "../utils/date";
+import { expandRecurringEvents } from "../utils/calendarLogic";
 
 function getWeekDates() {
   const today = new Date();
@@ -18,9 +20,7 @@ function getWeekDates() {
   });
 }
 
-function toDateString(date) {
-  return date.toISOString().split("T")[0];
-}
+
 
 function buildDailyBrief(dailyPlan) {
   if (dailyPlan.length === 0) {
@@ -51,22 +51,7 @@ function buildDailyBrief(dailyPlan) {
   return brief;
 }
 
-function getTravelReason(mode) {
-  switch (mode) {
-    case "Car":
-      return "Traffic tends to build up as the morning goes on, so this buffer keeps you ahead of it.";
-    case "Bus":
-      return "Bus schedules can shift a little, so this buffer protects your connection.";
-    case "Train":
-      return "Trains run on a fixed schedule, so this buffer covers the walk to the platform.";
-    case "Taxi":
-      return "Pickup times can vary, so this buffer accounts for wait.";
-    case "Walking":
-      return "This buffer accounts for pace and any stops along the way.";
-    default:
-      return "This buffer gives you a comfortable margin to arrive on time.";
-  }
-}
+
 
 function getCountdownLabel(event, now) {
   if (!event?.date || !event?.time) return null;
@@ -138,10 +123,27 @@ export default function Dashboard() {
     routes,
     profile.travelBuffer
 );
-  const nextEvent = dailyPlan[0];
-  const upcomingEvents = dailyPlan.slice(1, 5);
+  const upcomingDailyPlan = dailyPlan.filter((item) => {
+  const eventDateTime = new Date(`${item.date}T${item.time}`);
+  return eventDateTime >= now;
+});
+
+const nextEvent = upcomingDailyPlan[0] || null;
+const upcomingEvents = upcomingDailyPlan.slice(1, 5);
   const weekDates = getWeekDates();
-  const todayString = toDateString(new Date());
+  const todayString = toLocalDateString();
+
+  const weekStart = new Date(weekDates[0]);
+weekStart.setHours(0, 0, 0, 0);
+
+const weekEnd = new Date(weekDates[6]);
+weekEnd.setHours(23, 59, 59, 999);
+
+const weekOccurrences = expandRecurringEvents(
+  events,
+  weekStart,
+  weekEnd
+);
 
   return (
     <main className="page">
@@ -237,9 +239,9 @@ export default function Dashboard() {
 
           <div className="calendar-snapshot">
             {weekDates.map((date) => {
-              const dateString = toDateString(date);
-              const dayEventCount = events.filter(
-                (e) => e.date === dateString
+              const dateString = toLocalDateString(date);
+              const dayEventCount = weekOccurrences.filter(
+                (event) => event.occurenceDate === dateString
               ).length;
               const isToday = dateString === todayString;
 
@@ -264,10 +266,8 @@ export default function Dashboard() {
           </div>
 
           <p className="calendar-snapshot-summary">
-            {events.filter((e) =>
-              weekDates.some((d) => toDateString(d) === e.date)
-            ).length}{" "}
-            events this week
+            {weekOccurrences.length}{""}
+            {weekOccurrences.length === 1 ? "event" : "events"} this week
           </p>
         </div>
       </section>
